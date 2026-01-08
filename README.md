@@ -1,22 +1,19 @@
-# Estrutura do Projeto
+# Apollo Fullstack Challenge
 
-```text
-meu-projeto/
-├── backend/
-│   ├── app/
-│   │   ├── main.py          # Ponto de entrada do FastAPI
-│   │   ├── models.py        # Tabelas do Banco de Dados (ORM)
-│   │   ├── schemas.py       # Modelos Pydantic para validação (I/O)
-│   │   ├── crud.py          # Lógica de acesso ao DB (Create, Read, Update, Delete)
-│   │   └── routers/         # Endpoints da API (products, sales, uploads)
-│   ├── requirements.txt     # Dependências do Python
-│   └── data/                # Pasta temporária para processamento de CSVs
-├── frontend/
-│   ├── app/                 # Next.js App Router (páginas)
-│   ├── components/
-│   │   ├── ui/              # Componentes reutilizáveis (shadcn/ui)
-│   │   ├── Dashboard.tsx    # Componentes de visualização (Gráficos)
-│   │   └── ProductForm.tsx  # Formulários
-│   ├── lib/                 # Funções auxiliares (configuração do Axios/Fetch)
-│   └── package.json         # Dependências do Node.js
-└── README.md                # Documentação do projeto
+Projeto desenvolvido com FastAPI (Backend) e Next.js (Frontend).
+
+## 🚀 Como rodar localmente
+
+### Pré-requisitos
+- Python 3.10+
+- Node.js 18+
+
+### 1. Backend (API)
+```bash
+cd backend
+# Windows
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+# O Swagger estará em: http://localhost:8000/docs
