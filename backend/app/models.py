@@ -1,0 +1,1 @@
+# Defina suas tabelas do banco de dados (SQLAlchemy) aqui
