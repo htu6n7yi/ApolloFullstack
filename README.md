@@ -1,52 +1,164 @@
 # 🚀 Apollo Fullstack Project
 
-O **Apollo** é um sistema completo de gestão de vendas e estoque, composto por uma API robusta em Python e um Dashboard interativo em React/Next.js.
+> Sistema Fullstack de Gestão de Varejo com Dashboard Analítico, Controle de Estoque e PDV.
+
+![Status](https://img.shields.io/badge/Status-Concluído-success?style=for-the-badge)
+![Tech Backend](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Tech Frontend](https://img.shields.io/badge/Frontend-Next.js-black?style=for-the-badge&logo=next.js&logoColor=white)
 
 ---
 
-## 📂 Estrutura do Projeto
+## 📋 Sobre o Projeto
 
-O projeto é dividido em dois módulos principais:
+O **Apollo** é uma solução completa de gestão para estabelecimentos de varejo, oferecendo:
 
-### 1. [Backend (API)](./backend)
-Responsável pela lógica de negócios, banco de dados e processamento de arquivos.
-- **Tecnologias:** Python, FastAPI, SQLAlchemy, SQLite.
-- **Funcionalidades:** Upload de CSV, Gestão de Vendas, Analytics.
+- **Dashboard Analítico** com KPIs e gráficos de desempenho em tempo real
+- **Controle de Estoque** com cadastro manual e importação em massa via CSV
+- **Sistema de Vendas (PDV)** com registro de transações e cálculo automático de lucro
+- **Gestão de Categorias** para organização hierárquica de produtos
 
-👉 **[Ver documentação do Backend](./backend/README.md)**
-
-### 2. [Frontend (Dashboard)](./frontend)
-Interface visual para análise de dados e upload de arquivos.
-- **Tecnologias:** React, Next.js, ShadcnUI, Recharts.
-- **Funcionalidades:** Gráficos interativos, KPIs, Upload Drag-and-drop.
-
-👉 **[Ver documentação do Frontend](./frontend/README.md)** (Em breve)
+O sistema foi desenvolvido com tecnologias modernas, priorizando performance, escalabilidade e experiência do usuário.
 
 ---
 
-## ⚡ Quick Start (Rodando tudo)
+## 📂 Documentação Detalhada
 
-Para rodar o projeto completo, você precisará de dois terminais abertos:
+Este projeto está dividido em duas partes. Para detalhes de arquitetura, instalação passo a passo e guias de deploy, acesse os links abaixo:
 
-**Terminal 1 (Backend):**
+### 👉 [Documentação do Backend (API)](./backend/README.md)
+*Contém: Configuração do Banco de Dados, Swagger, Endpoints e tratamento de CSV.*
+
+### 👉 [Documentação do Frontend (Interface)](./frontend/README.md)
+*Contém: Configuração de componentes, Variáveis de Ambiente e Estrutura de Pastas.*
+
+---
+
+## ⚡ Quick Start (Como rodar agora)
+
+Se você já tem Python e Node.js instalados, use os comandos abaixo para subir o projeto rapidamente.
+
+### 1. Inicie o Backend
+
 ```bash
 cd backend
-# Ative seu venv
+pip install -r requirements.txt
 python -m uvicorn app.main:app --reload
 ```
 
-**Terminal 2 (Frontend):**
+A API ficará disponível em: `http://127.0.0.1:8000`
+
+**Documentação interativa (Swagger):** `http://127.0.0.1:8000/docs`
+
+### 2. Inicie o Frontend
+
+Abra um novo terminal na raiz do projeto:
+
 ```bash
 cd frontend
+npm install
 npm run dev
 ```
 
-O projeto estará acessível em:
-- Frontend: http://localhost:3000
-- Backend: http://127.0.0.1:8000
+Acesse a aplicação em: `http://localhost:3000`
+
+> **Nota:** Certifique-se de criar o arquivo `.env.local` na pasta frontend apontando para o backend:
+> ```bash
+> NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+> ```
 
 ---
 
-## 📝 Observações
+## 🛠️ Tecnologias Principais
 
-Certifique-se de ter todas as dependências instaladas antes de executar o projeto. Consulte a documentação específica de cada módulo para mais detalhes sobre instalação e configuração.
+### Backend
+- **Python 3.11+** - Linguagem base
+- **FastAPI** - Framework web moderno e de alta performance
+- **SQLAlchemy** - ORM para manipulação do banco de dados
+- **SQLite** - Banco de dados relacional (pronto para migração para PostgreSQL)
+- **Pydantic** - Validação de dados e serialização
+- **Uvicorn** - Servidor ASGI de alta performance
+
+### Frontend
+- **TypeScript** - JavaScript tipado para maior segurança
+- **Next.js 15** - Framework React com App Router
+- **Tailwind CSS** - Framework CSS utilitário
+- **Shadcn/ui** - Biblioteca de componentes acessíveis
+- **Recharts** - Biblioteca para gráficos e visualizações
+- **Axios** - Cliente HTTP para comunicação com a API
+- **Lucide React** - Biblioteca de ícones moderna
+
+---
+
+## 📊 Arquitetura do Sistema
+
+```
+apollo-smartmart/
+├── backend/                    # API e Lógica de Negócio
+│   ├── app/
+│   │   ├── main.py            # Ponto de entrada da aplicação
+│   │   ├── database.py        # Configuração do banco de dados
+│   │   ├── models.py          # Modelos SQLAlchemy
+│   │   ├── schemas.py         # Schemas Pydantic
+│   │   └── routers/           # Endpoints da API
+│   ├── requirements.txt       # Dependências Python
+│   └── README.md             # Documentação do Backend
+│
+└── frontend/                  # Interface do Usuário
+    ├── app/                   # Rotas do Next.js
+    │   ├── page.tsx          # Dashboard
+    │   ├── products/         # Gestão de Produtos
+    │   ├── sales/            # Gestão de Vendas
+    │   └── categories/       # Gestão de Categorias
+    ├── components/            # Componentes React
+    ├── lib/                   # Utilitários e configurações
+    └── README.md             # Documentação do Frontend
+```
+
+---
+
+## ✨ Funcionalidades
+
+### 📊 Dashboard
+- Visualização de KPIs (Faturamento, Lucro, Total de Produtos)
+- Gráficos de desempenho de vendas mensais
+- Métricas atualizadas em tempo real
+
+### 📦 Gestão de Produtos
+- Listagem com busca e filtros
+- Cadastro manual de produtos
+- Importação em massa via CSV
+- Vinculação automática com categorias
+
+### 💰 Gestão de Vendas
+- Histórico completo de transações
+- Registro manual de vendas
+- Importação de histórico via CSV
+- Cálculo automático de lucro (margem 30%)
+
+### 🏷️ Gestão de Categorias
+- Visualização de departamentos
+- Correção de nomes via upload
+- Organização hierárquica
+
+---
+
+## 🔧 Requisitos do Sistema
+
+- **Python** 3.11 ou superior
+- **Node.js** 18 ou superior
+- **npm** ou **yarn**
+- **Git** para controle de versão
+
+---
+
+## 📝 Licença
+
+Desenvolvido como parte de um desafio técnico fullstack.
+
+MIT License - Sinta-se livre para usar como base para estudos e projetos.
+
+---
+
+## 📧 Contato
+
+Desenvolvido por José Carlos Cavalcanti (htu6n7yi)
