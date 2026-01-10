@@ -33,3 +33,20 @@ Para rodar o projeto completo, você precisará de dois terminais abertos:
 cd backend
 # Ative seu venv
 python -m uvicorn app.main:app --reload
+```
+
+**Terminal 2 (Frontend):**
+```bash
+cd frontend
+npm run dev
+```
+
+O projeto estará acessível em:
+- Frontend: http://localhost:3000
+- Backend: http://127.0.0.1:8000
+
+---
+
+## 📝 Observações
+
+Certifique-se de ter todas as dependências instaladas antes de executar o projeto. Consulte a documentação específica de cada módulo para mais detalhes sobre instalação e configuração.
