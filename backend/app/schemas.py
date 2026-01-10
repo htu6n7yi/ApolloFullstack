@@ -49,3 +49,16 @@ class Sale(SaleBase):
 
     class Config:
         from_attributes = True
+
+
+# --- Schemas para o DASHBOARD ---
+class ChartData(BaseModel):
+    date: str
+    total_sales: float
+    profit: float
+
+class DashboardData(BaseModel):
+    total_products: int
+    total_sales_value: float
+    total_profit: float
+    chart_data: List[ChartData] # Lista para alimentar os gráficos
