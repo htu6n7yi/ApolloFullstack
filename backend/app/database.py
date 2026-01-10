@@ -1,20 +1,27 @@
-# backend/app/database.py
+import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-# Cria um arquivo de banco de dados chamado "app.db" na raiz
-SQLALCHEMY_DATABASE_URL = "sqlite:///./app.db"
+# Pega a URL do Render ou usa SQLite localmente
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
-# check_same_thread=False é necessário apenas para SQLite
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
+# Correção para o Postgres do Render (começa com postgres:// mas o SQLAlchemy quer postgresql://)
+if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+if "sqlite" in SQLALCHEMY_DATABASE_URL:
+    # Configuração para SQLite
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    )
+else:
+    # Configuração para PostgreSQL (Produção)
+    engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
-# Dependência para pegar a sessão do DB em cada request
 def get_db():
     db = SessionLocal()
     try:
