@@ -6,9 +6,7 @@ Interface moderna e responsiva para o sistema de gestão de varejo **Apollo Smar
 
 ## 📸 Screenshots
 
-![Dashboard](./screenshots/dashboard.jpeg)
-![Produtos](./screenshots/products.jpeg)
-![Modal de Venda](./screenshots/sales.jpeg)
+<img src="./screenshots/dashboard.jpeg" alt="Dashboard" width="600"/> <img src="./screenshots/products.jpeg" alt="Produtos" width="600"/> <img src="./screenshots/sales.jpeg" alt="Venda" width="600"/>
 
 ---
 
