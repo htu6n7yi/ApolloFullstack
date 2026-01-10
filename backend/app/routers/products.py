@@ -39,3 +39,8 @@ def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)
     # Verifica se categoria existe (opcional, mas recomendado)
     # Aqui assumimos que o crud.create_product já lida com isso
     return crud.create_product(db, product)
+
+@router.get("/categories/", response_model=list[schemas.Category])
+def read_categories(db: Session = Depends(get_db)):
+    # Retorna todas as categorias para usar no dropdown do frontend
+    return db.query(models.Category).all()

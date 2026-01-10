@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app import crud, schemas, models  # <--- O erro estava faltando importar 'models' aqui
+from app import crud, schemas, models
 from app.database import get_db
 import csv
 import io
@@ -8,7 +8,70 @@ from datetime import datetime
 
 router = APIRouter()
 
-# --- ROTA 1: UPLOAD DE PRODUTOS ---
+# --- ROTA 1: UPLOAD DE CATEGORIAS ---
+@router.post("/upload-categories-csv/")
+def upload_categories_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    if not file.filename.endswith(".csv"):
+        raise HTTPException(status_code=400, detail="O arquivo deve ser um CSV.")
+
+    content = file.file.read()
+    
+    try:
+        decoded_content = content.decode("utf-8")
+        # Detecta delimitador
+        delimiter = ";" if decoded_content.count(";") > decoded_content.count(",") else ","
+        csv_file = io.StringIO(decoded_content)
+        csv_reader = csv.DictReader(csv_file, delimiter=delimiter)
+        
+        # Normaliza cabeçalhos
+        if csv_reader.fieldnames:
+            csv_reader.fieldnames = [name.strip().lower() for name in csv_reader.fieldnames]
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao ler arquivo: {str(e)}")
+
+    updated_count = 0
+    created_count = 0
+    errors = []
+
+    for index, row in enumerate(csv_reader):
+        try:
+            cat_id = row.get("id")
+            name = row.get("name")
+            discount = row.get("discount_percentage", 0.0)
+
+            if not cat_id or not name:
+                continue
+
+            # Busca categoria existente
+            category = db.query(models.Category).filter(models.Category.id == int(cat_id)).first()
+
+            if category:
+                category.name = name
+                updated_count += 1
+            else:
+                new_category = models.Category(
+                    id=int(cat_id),
+                    name=name,
+                    discount_percentage=float(discount)
+                )
+                db.add(new_category)
+                created_count += 1
+
+        except Exception as e:
+            errors.append(f"Linha {index + 1}: Erro: {str(e)}")
+
+    db.commit()
+
+    return {
+        "message": "Categorias processadas",
+        "created": created_count,
+        "updated": updated_count,
+        "errors": errors
+    }
+
+
+# --- ROTA 2: UPLOAD DE PRODUTOS ---
 @router.post("/upload-csv/")
 def upload_products_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
     if not file.filename.endswith(".csv"):
@@ -18,17 +81,10 @@ def upload_products_csv(file: UploadFile = File(...), db: Session = Depends(get_
     
     try:
         decoded_content = content.decode("utf-8")
-        
-        # Detector de Separador
-        if decoded_content.count(";") > decoded_content.count(","):
-            delimiter = ";"
-        else:
-            delimiter = ","
-            
+        delimiter = ";" if decoded_content.count(";") > decoded_content.count(",") else ","
         csv_file = io.StringIO(decoded_content)
         csv_reader = csv.DictReader(csv_file, delimiter=delimiter)
         
-        # Normalização de Cabeçalhos
         if csv_reader.fieldnames:
             csv_reader.fieldnames = [name.strip().lower() for name in csv_reader.fieldnames]
 
@@ -42,31 +98,48 @@ def upload_products_csv(file: UploadFile = File(...), db: Session = Depends(get_
         try:
             name = row.get("name")
             price_str = row.get("price")
-            # Tenta 'category' ou 'category_id'
-            category_name = row.get("category") or row.get("category_id")
+            category_id = row.get("category_id")
+            category_name = row.get("category")
 
-            if not name or not price_str or not category_name:
-                missing = []
-                if not name: missing.append("name")
-                if not price_str: missing.append("price")
-                if not category_name: missing.append("category")
-                
-                if missing:
-                    errors.append(f"Linha {index + 1}: Dados faltando: {', '.join(missing)}")
-                continue 
+            if not name or not price_str:
+                errors.append(f"Linha {index+1}: Nome ou preço faltando.")
+                continue
 
             clean_price = str(price_str).replace("R$", "").strip().replace(".", "").replace(",", ".")
             price = float(clean_price)
 
-            db_category = crud.get_category_by_name(db, category_name)
-            if not db_category:
-                new_cat = schemas.CategoryCreate(name=category_name, discount_percentage=0.0)
-                db_category = crud.create_category(db, new_cat)
+            final_category_id = None
             
+            if category_id:
+                cat_id_int = int(category_id)
+                db_category = db.query(models.Category).filter(models.Category.id == cat_id_int).first()
+                if not db_category:
+                    # Cria categoria placeholder (nome = ID) para ser corrigida depois
+                    new_cat = models.Category(id=cat_id_int, name=str(cat_id_int), discount_percentage=0.0)
+                    db.add(new_cat)
+                    db.commit()
+                    db.refresh(new_cat)
+                    final_category_id = new_cat.id
+                else:
+                    final_category_id = db_category.id
+            
+            elif category_name:
+                db_category = crud.get_category_by_name(db, category_name)
+                if not db_category:
+                    new_cat = schemas.CategoryCreate(name=category_name, discount_percentage=0.0)
+                    db_cat_obj = crud.create_category(db, new_cat)
+                    final_category_id = db_cat_obj.id
+                else:
+                    final_category_id = db_category.id
+
+            if not final_category_id:
+                errors.append(f"Linha {index+1}: Categoria não identificada.")
+                continue
+
             new_prod = schemas.ProductCreate(
                 name=name,
                 price=price,
-                category_id=db_category.id
+                category_id=final_category_id
             )
             crud.create_product(db, new_prod)
             products_added += 1
@@ -81,7 +154,7 @@ def upload_products_csv(file: UploadFile = File(...), db: Session = Depends(get_
     }
 
 
-# --- ROTA 2: UPLOAD DE VENDAS (Seu CSV específico) ---
+# --- ROTA 3: UPLOAD DE VENDAS ---
 @router.post("/upload-sales-csv/")
 def upload_sales_csv(file: UploadFile = File(...), db: Session = Depends(get_db)):
     if not file.filename.endswith(".csv"):
@@ -91,17 +164,10 @@ def upload_sales_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
     
     try:
         decoded_content = content.decode("utf-8")
-        
-        # Detector de Separador
-        if decoded_content.count(";") > decoded_content.count(","):
-            delimiter = ";"
-        else:
-            delimiter = ","
-            
+        delimiter = ";" if decoded_content.count(";") > decoded_content.count(",") else ","
         csv_file = io.StringIO(decoded_content)
         csv_reader = csv.DictReader(csv_file, delimiter=delimiter)
         
-        # Normalizar cabeçalhos
         if csv_reader.fieldnames:
             csv_reader.fieldnames = [name.strip().lower() for name in csv_reader.fieldnames]
 
@@ -113,7 +179,6 @@ def upload_sales_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
 
     for index, row in enumerate(csv_reader):
         try:
-            # Ler colunas do seu CSV (id, product_id, quantity, total_price, date)
             p_id = row.get("product_id")
             qtd = row.get("quantity")
             price = row.get("total_price")
@@ -122,32 +187,27 @@ def upload_sales_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
             if not p_id or not qtd:
                 continue 
 
-            # Verificar se o produto existe no banco
             product_id = int(p_id)
             db_product = db.query(models.Product).filter(models.Product.id == product_id).first()
             
             if not db_product:
-                errors.append(f"Linha {index + 1}: Produto ID {product_id} não encontrado. Cadastre-o primeiro.")
+                errors.append(f"Linha {index + 1}: Produto ID {product_id} não encontrado.")
                 continue
 
             quantity = int(float(qtd))
-            total_price = float(price) if price else 0.0
-
-            # Calcular Lucro Estimado (30%)
+            total_price = float(price) if price else (db_product.price * quantity)
             profit = total_price * 0.30 
 
-            # Tratar Data
+            # Processamento de Data
             sale_date = datetime.utcnow()
             if date_str:
-                try:
-                    sale_date = datetime.strptime(date_str, "%Y-%m-%d")
-                except:
+                for fmt in ("%Y-%m-%d", "%d/%m/%Y"):
                     try:
-                        sale_date = datetime.strptime(date_str, "%d/%m/%Y")
-                    except:
-                        pass 
+                        sale_date = datetime.strptime(date_str, fmt)
+                        break
+                    except ValueError:
+                        pass
 
-            # Salvar usando models.Sale (agora importado corretamente)
             new_sale = models.Sale(
                 product_id=product_id,
                 quantity=quantity,

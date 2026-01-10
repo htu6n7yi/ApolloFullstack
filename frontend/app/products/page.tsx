@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Upload, Search, PackageOpen } from "lucide-react";
+import { CreateProductModal } from "@/components/CreateProductModal";
+import { CsvUploadModal } from "@/components/CsvUploadModal";
 
 // Tipagem do Produto
 interface Product {
@@ -64,15 +66,9 @@ export default function ProductsPage() {
         </div>
 
         <div className="flex gap-2">
-          {/* Botões de Ação (Ainda sem função, vamos implementar jajá) */}
-          <Button variant="outline">
-            <Upload className="mr-2 h-4 w-4" />
-            Importar CSV
-          </Button>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Produto
-          </Button>
+          {/* Ao ter sucesso, recarrega a tabela chamando fetchProducts */}
+          <CsvUploadModal onSuccess={fetchProducts} />
+          <CreateProductModal onSuccess={fetchProducts} />
         </div>
       </div>
 
@@ -122,7 +118,9 @@ export default function ProductsPage() {
                   <TableCell className="font-medium text-slate-500">
                     #{product.id}
                   </TableCell>
-                  <TableCell className="font-semibold">{product.name}</TableCell>
+                  <TableCell className="font-semibold">
+                    {product.name}
+                  </TableCell>
                   <TableCell>
                     <Badge variant="secondary">
                       {product.category?.name || "Sem Categoria"}
