@@ -5,6 +5,7 @@ from app.database import get_db
 import random
 from datetime import datetime, timedelta
 from typing import List
+from fastapi import HTTPException
 
 
 router = APIRouter()
@@ -50,3 +51,10 @@ def read_sales(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     
     db.commit()
     return {"message": "50 vendas falsas geradas com sucesso!"}
+
+@router.post("/", response_model=schemas.Sale)
+def create_sale(sale: schemas.SaleCreate, db: Session = Depends(get_db)):
+    db_sale = crud.create_sale(db, sale=sale)
+    if db_sale is None:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    return db_sale

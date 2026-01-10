@@ -68,3 +68,31 @@ def get_dashboard_stats(db: Session):
         "total_profit": total_profit,
         "chart_data": chart_data
     }
+
+# ... (Mantenha as outras funções)
+
+def create_sale(db: Session, sale: schemas.SaleCreate):
+    # 1. Busca o produto para saber o preço
+    product = db.query(models.Product).filter(models.Product.id == sale.product_id).first()
+    
+    if not product:
+        # Se tentar vender um produto que não existe, retorna None
+        return None
+
+    # 2. Calcula totais automaticamente
+    total_price = product.price * sale.quantity
+    profit = total_price * 0.30  # Margem de 30% padrão
+
+    # 3. Cria a venda
+    db_sale = models.Sale(
+        product_id=sale.product_id,
+        quantity=sale.quantity,
+        total_price=total_price,
+        profit=profit,
+        date=datetime.utcnow() # Usa a data/hora de agora
+    )
+    
+    db.add(db_sale)
+    db.commit()
+    db.refresh(db_sale)
+    return db_sale

@@ -31,3 +31,11 @@ def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)
 @router.get("/products/", response_model=List[schemas.Product])
 def read_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_products(db)
+
+# ... imports anteriores
+
+@router.post("/", response_model=schemas.Product)
+def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
+    # Verifica se categoria existe (opcional, mas recomendado)
+    # Aqui assumimos que o crud.create_product já lida com isso
+    return crud.create_product(db, product)
