@@ -1,15 +1,16 @@
 from fastapi import FastAPI
 from app import models
 from app.database import engine
-from app.routers import products
+# Agora importamos 'uploads' no plural
+from app.routers import products, uploads 
 
-# Cria as tabelas no banco de dados
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# Inclui as rotas que acabamos de criar
 app.include_router(products.router, tags=["products"])
+# Incluímos o roteador 'uploads'
+app.include_router(uploads.router, tags=["uploads"]) 
 
 @app.get("/")
 def read_root():
