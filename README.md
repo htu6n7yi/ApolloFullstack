@@ -1,19 +1,35 @@
-# Apollo Fullstack Challenge
+# 🚀 Apollo Fullstack Project
 
-Projeto desenvolvido com FastAPI (Backend) e Next.js (Frontend).
+O **Apollo** é um sistema completo de gestão de vendas e estoque, composto por uma API robusta em Python e um Dashboard interativo em React/Next.js.
 
-## 🚀 Como rodar localmente
+---
 
-### Pré-requisitos
-- Python 3.10+
-- Node.js 18+
+## 📂 Estrutura do Projeto
 
-### 1. Backend (API)
+O projeto é dividido em dois módulos principais:
+
+### 1. [Backend (API)](./backend)
+Responsável pela lógica de negócios, banco de dados e processamento de arquivos.
+- **Tecnologias:** Python, FastAPI, SQLAlchemy, SQLite.
+- **Funcionalidades:** Upload de CSV, Gestão de Vendas, Analytics.
+
+👉 **[Ver documentação do Backend](./backend/README.md)**
+
+### 2. [Frontend (Dashboard)](./frontend)
+Interface visual para análise de dados e upload de arquivos.
+- **Tecnologias:** React, Next.js, ShadcnUI, Recharts.
+- **Funcionalidades:** Gráficos interativos, KPIs, Upload Drag-and-drop.
+
+👉 **[Ver documentação do Frontend](./frontend/README.md)** (Em breve)
+
+---
+
+## ⚡ Quick Start (Rodando tudo)
+
+Para rodar o projeto completo, você precisará de dois terminais abertos:
+
+**Terminal 1 (Backend):**
 ```bash
 cd backend
-# Windows
-python -m venv venv
-.\venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-# O Swagger estará em: http://localhost:8000/docs
+# Ative seu venv
+python -m uvicorn app.main:app --reload
