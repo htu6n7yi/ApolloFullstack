@@ -12,13 +12,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Upload, FileSpreadsheet, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
+// Agora aceitamos "endpoint" e "title" como props
 interface CsvUploadModalProps {
   onSuccess: () => void;
+  endpoint: string;       // Ex: "/upload-csv/" ou "/upload-sales-csv/"
+  title?: string;         // Ex: "Importar Produtos"
 }
 
-export function CsvUploadModal({ onSuccess }: CsvUploadModalProps) {
+export function CsvUploadModal({ onSuccess, endpoint, title = "Importar CSV" }: CsvUploadModalProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  // O backend retorna chaves diferentes (products_added vs sales_added), então usamos 'any' aqui ou um tipo genérico
   const [result, setResult] = useState<{ added: number; errors: string[] } | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,17 +36,20 @@ export function CsvUploadModal({ onSuccess }: CsvUploadModalProps) {
     formData.append("file", file);
 
     try {
-      const response = await api.post("/upload-csv/", formData, {
+      const response = await api.post(endpoint, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       
+      // Backend pode retornar 'products_added' ou 'sales_added', pegamos o que vier
+      const count = response.data.products_added || response.data.sales_added || 0;
+      
       setResult({
-        added: response.data.products_added,
-        errors: response.data.errors,
+        added: count,
+        errors: response.data.errors || [],
       });
       
-      if (response.data.products_added > 0) {
-        onSuccess(); // Atualiza a lista atrás do modal
+      if (count > 0) {
+        onSuccess();
       }
     } catch (error) {
       console.error(error);
@@ -57,12 +64,12 @@ export function CsvUploadModal({ onSuccess }: CsvUploadModalProps) {
       <DialogTrigger asChild>
         <Button variant="outline">
           <Upload className="mr-2 h-4 w-4" />
-          Importar CSV
+          {title}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Importação em Massa</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-4 py-4 text-center">
@@ -84,7 +91,7 @@ export function CsvUploadModal({ onSuccess }: CsvUploadModalProps) {
           {loading && (
             <div className="py-10 flex flex-col items-center">
               <Loader2 className="h-10 w-10 animate-spin text-blue-500 mb-2" />
-              <p className="text-sm text-slate-500">Processando arquivo...</p>
+              <p className="text-sm text-slate-500">Processando dados...</p>
             </div>
           )}
 
@@ -92,7 +99,7 @@ export function CsvUploadModal({ onSuccess }: CsvUploadModalProps) {
             <div className="space-y-4">
               <div className="flex items-center justify-center gap-2 text-green-600">
                 <CheckCircle className="h-6 w-6" />
-                <span className="font-bold text-lg">{result.added} produtos adicionados!</span>
+                <span className="font-bold text-lg">{result.added} registros importados!</span>
               </div>
 
               {result.errors.length > 0 && (
@@ -101,7 +108,7 @@ export function CsvUploadModal({ onSuccess }: CsvUploadModalProps) {
                     <AlertCircle className="h-4 w-4" /> Erros encontrados:
                   </h4>
                   <ul className="list-disc pl-5 text-xs text-red-600 space-y-1">
-                    {result.errors.map((err, i) => (
+                    {result.errors.map((err: string, i: number) => (
                       <li key={i}>{err}</li>
                     ))}
                   </ul>

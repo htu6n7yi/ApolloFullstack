@@ -13,7 +13,7 @@ class CategoryCreate(CategoryBase):
 class Category(CategoryBase):
     id: int
     class Config:
-        from_attributes = True # ou orm_mode = True (depende da versao do Pydantic, from_attributes é a v2)
+        from_attributes = True
 
 # --- Schemas de Produto ---
 class ProductBase(BaseModel):
@@ -21,15 +21,12 @@ class ProductBase(BaseModel):
     price: float
     category_id: int
 
-# CORREÇÃO AQUI: 'name: str' em vez de 'name: string'
-class ProductCreate(BaseModel):
-    name: str 
-    price: float
-    category_id: int
+class ProductCreate(ProductBase):
+    pass
 
 class Product(ProductBase):
     id: int
-    # category é opcional para evitar erro de recursão se não carregada
+    # Categoria é opcional para evitar erro de recursão se não carregada
     category: Optional[Category] = None 
     class Config:
         from_attributes = True
@@ -38,23 +35,25 @@ class Product(ProductBase):
 class SaleBase(BaseModel):
     product_id: int
     quantity: int
+
+class SaleCreate(SaleBase):
+    # ✅ ADICIONADO: Data opcional (usa data atual se não fornecida)
+    date: Optional[datetime] = None
+
+class Sale(SaleBase):
+    id: int
     total_price: float
     profit: float
     date: datetime
-
-class SaleCreate(BaseModel):
-    product_id: int
-    quantity: int
-    # Data é opcional na criação manual
+    # Opcional: incluir dados do produto na resposta
+    product: Optional[Product] = None
     
-class Sale(SaleBase):
-    id: int
     class Config:
         from_attributes = True
 
 # --- Schemas para o DASHBOARD ---
 class ChartData(BaseModel):
-    date: str
+    date: str  # Formato: "2026-01" (ano-mês)
     total_sales: float
     profit: float
 

@@ -67,7 +67,11 @@ export default function ProductsPage() {
 
         <div className="flex gap-2">
           {/* Ao ter sucesso, recarrega a tabela chamando fetchProducts */}
-          <CsvUploadModal onSuccess={fetchProducts} />
+          <CsvUploadModal
+            onSuccess={fetchProducts}
+            endpoint="/upload-csv/"
+            title="Importar Produtos"
+          />
           <CreateProductModal onSuccess={fetchProducts} />
         </div>
       </div>

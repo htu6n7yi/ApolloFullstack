@@ -1,28 +1,41 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import crud, schemas, models
 from app.database import get_db
 import random
 from datetime import datetime, timedelta
 from typing import List
-from fastapi import HTTPException
-
 
 router = APIRouter()
 
+# ========== DASHBOARD STATS ==========
 @router.get("/dashboard-stats/", response_model=schemas.DashboardData)
 def get_stats(db: Session = Depends(get_db)):
     return crud.get_dashboard_stats(db)
 
-# --- BÔNUS: Gerador de Dados Falsos ---
-# Use isso para popular seu dashboard sem precisar cadastrar 100 vendas na mão
+# ========== LISTAR VENDAS ==========
+@router.get("/sales/", response_model=List[schemas.Sale])
+def read_sales(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    sales = db.query(models.Sale).offset(skip).limit(limit).all()
+    return sales
+
+# ========== CRIAR VENDA ==========
+# ✅ CORRIGIDO: Mudei de "/" para "/sales/"
+@router.post("/sales/", response_model=schemas.Sale)
+def create_sale(sale: schemas.SaleCreate, db: Session = Depends(get_db)):
+    db_sale = crud.create_sale(db, sale=sale)
+    if db_sale is None:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    return db_sale
+
+# ========== GERADOR DE DADOS FALSOS ==========
 @router.post("/generate-fake-sales/")
 def generate_fake_sales(db: Session = Depends(get_db)):
     products = crud.get_products(db)
     if not products:
         return {"message": "Cadastre produtos antes de gerar vendas!"}
 
-    for _ in range(50): # Gera 50 vendas aleatórias
+    for _ in range(50):  # Gera 50 vendas aleatórias
         product = random.choice(products)
         quantity = random.randint(1, 5)
         
@@ -43,18 +56,6 @@ def generate_fake_sales(db: Session = Depends(get_db)):
             date=sale_date
         )
         db.add(fake_sale)
-
-@router.get("/sales/", response_model=List[schemas.Sale])
-def read_sales(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    sales = db.query(models.Sale).offset(skip).limit(limit).all()
-    return sales
     
-    db.commit()
+    db.commit()  # ✅ MOVIDO PARA FORA DO LOOP
     return {"message": "50 vendas falsas geradas com sucesso!"}
-
-@router.post("/", response_model=schemas.Sale)
-def create_sale(sale: schemas.SaleCreate, db: Session = Depends(get_db)):
-    db_sale = crud.create_sale(db, sale=sale)
-    if db_sale is None:
-        raise HTTPException(status_code=404, detail="Produto não encontrado")
-    return db_sale

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app import models, schemas
 from sqlalchemy import func
+from datetime import datetime  # ← ADICIONE ESTA LINHA
 
 # --- CRUD de Categorias ---
 def get_category_by_name(db: Session, name: str):
@@ -34,8 +35,54 @@ def create_product(db: Session, product: schemas.ProductCreate):
 def get_products(db: Session):
     return db.query(models.Product).all()
 
+# --- CRUD de Vendas ---
+def create_sale(db: Session, sale: schemas.SaleCreate):
+    """
+    Cria uma venda calculando automaticamente:
+    - total_price = preço do produto × quantidade
+    - profit = 30% do total_price
+    """
+    # 1. Busca o produto para obter o preço
+    product = db.query(models.Product).filter(models.Product.id == sale.product_id).first()
+    
+    if not product:
+        # Produto não encontrado
+        return None
+
+    # 2. Calcula valores automaticamente
+    total_price = product.price * sale.quantity
+    profit = total_price * 0.30  # Margem de lucro de 30%
+
+    # 3. Usa a data fornecida ou a data atual
+    sale_date = sale.date if hasattr(sale, 'date') and sale.date else datetime.utcnow()
+
+    # 4. Cria a venda
+    db_sale = models.Sale(
+        product_id=sale.product_id,
+        quantity=sale.quantity,
+        total_price=total_price,
+        profit=profit,
+        date=sale_date
+    )
+    
+    db.add(db_sale)
+    db.commit()
+    db.refresh(db_sale)
+    return db_sale
+
+def get_sales(db: Session, skip: int = 0, limit: int = 100):
+    """Lista todas as vendas com paginação"""
+    return db.query(models.Sale).offset(skip).limit(limit).all()
+
 # --- CRUD de Estatísticas (Dashboard) ---
 def get_dashboard_stats(db: Session):
+    """
+    Retorna estatísticas do dashboard:
+    - Total de produtos cadastrados
+    - Valor total de vendas
+    - Lucro total
+    - Dados agrupados por mês para gráficos
+    """
     # 1. Totais Gerais
     total_products = db.query(func.count(models.Product.id)).scalar()
     
@@ -53,46 +100,18 @@ def get_dashboard_stats(db: Session):
         func.sum(models.Sale.profit).label('profit')
     ).group_by('month').order_by('month').all()
 
-    # Formatar para o Schema
+    # 3. Formatar dados do gráfico
     chart_data = []
     for row in sales_by_month:
         chart_data.append({
             "date": row.month,
-            "total_sales": row.total_sales,
-            "profit": row.profit
+            "total_sales": float(row.total_sales or 0),
+            "profit": float(row.profit or 0)
         })
 
     return {
         "total_products": total_products,
-        "total_sales_value": total_sales_value,
-        "total_profit": total_profit,
+        "total_sales_value": float(total_sales_value),
+        "total_profit": float(total_profit),
         "chart_data": chart_data
     }
-
-# ... (Mantenha as outras funções)
-
-def create_sale(db: Session, sale: schemas.SaleCreate):
-    # 1. Busca o produto para saber o preço
-    product = db.query(models.Product).filter(models.Product.id == sale.product_id).first()
-    
-    if not product:
-        # Se tentar vender um produto que não existe, retorna None
-        return None
-
-    # 2. Calcula totais automaticamente
-    total_price = product.price * sale.quantity
-    profit = total_price * 0.30  # Margem de 30% padrão
-
-    # 3. Cria a venda
-    db_sale = models.Sale(
-        product_id=sale.product_id,
-        quantity=sale.quantity,
-        total_price=total_price,
-        profit=profit,
-        date=datetime.utcnow() # Usa a data/hora de agora
-    )
-    
-    db.add(db_sale)
-    db.commit()
-    db.refresh(db_sale)
-    return db_sale
