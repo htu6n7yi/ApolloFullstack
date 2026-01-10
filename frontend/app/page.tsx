@@ -4,12 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api"; // Nossa configuração do Axios
 import { StatsCard } from "@/components/StatsCard"; // Nosso card reutilizável
 import { Button } from "@/components/ui/button";
-import { 
-  DollarSign, 
-  Package, 
-  TrendingUp, 
-  AlertCircle 
-} from "lucide-react";
+import { DollarSign, Package, TrendingUp, AlertCircle } from "lucide-react";
 import {
   ComposedChart,
   Line,
@@ -78,8 +73,13 @@ export default function DashboardPage() {
         <AlertCircle size={48} />
         <h2 className="text-xl font-bold">Erro de Conexão</h2>
         <p className="text-slate-600 text-center max-w-md">
-          Não conseguimos conectar com o servidor em <strong>{process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}</strong>.
-          <br />Verifique se o terminal do Python está rodando.
+          Não conseguimos conectar com o servidor em{" "}
+          <strong>
+            {process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}
+          </strong>
+          .
+          <br />
+          Verifique se o terminal do Python está rodando.
         </p>
         <Button onClick={fetchDashboardData} variant="outline">
           Tentar Novamente
@@ -154,13 +154,16 @@ export default function DashboardPage() {
                     tickFormatter={(value) => `R$${value}`}
                   />
                   <Tooltip
-                    formatter={(value: number) =>
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      }).format(value)
+                    formatter={(value: number | string | undefined) =>
+                      value !== undefined
+                        ? new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          }).format(Number(value))
+                        : ""
                     }
                   />
+
                   <Legend />
                   <Bar
                     dataKey="total_sales"
