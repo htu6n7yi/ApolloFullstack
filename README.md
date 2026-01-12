@@ -7,15 +7,15 @@ Sistema completo de gestão para varejo desenvolvido com **FastAPI** (backend) e
 ## 📸 Preview
 
 <p align="center">
-  <img src="./screenshots/dashboard.jpeg" alt="Dashboard" width="800"/>
+  <img src="./frontend/screenshots/dashboard.jpeg" alt="Dashboard" width="800"/>
 </p>
 
 <p align="center">
-  <img src="./screenshots/products.jpeg" alt="Produtos" width="800"/>
+  <img src="./frontend/screenshots/products.jpeg" alt="Produtos" width="800"/>
 </p>
 
 <p align="center">
-  <img src="./screenshots/sales.jpeg" alt="Vendas" width="800"/>
+  <img src="./frontend/screenshots/sales.jpeg" alt="Vendas" width="800"/>
 </p>
 
 ---
