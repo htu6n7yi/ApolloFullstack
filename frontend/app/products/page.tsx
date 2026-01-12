@@ -20,6 +20,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { 
   Plus, 
   Upload, 
@@ -28,12 +36,13 @@ import {
   ChevronLeft, 
   ChevronRight,
   Filter,
-  X
+  X,
+  Pencil,
+  Check
 } from "lucide-react";
 import { CreateProductModal } from "@/components/CreateProductModal";
 import { CsvUploadModal } from "@/components/CsvUploadModal";
 
-// Tipagem
 interface Category {
   id: number;
   name: string;
@@ -61,9 +70,17 @@ export default function ProductsPage() {
   
   // Estados de Paginação
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 15; // Ajuste conforme necessário
+  const itemsPerPage = 15;
 
-  // Busca produtos e categorias
+  // Estados de Edição
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    price: 0,
+    category_id: 0
+  });
+  const [saving, setSaving] = useState(false);
+
   async function fetchData() {
     try {
       setLoading(true);
@@ -83,6 +100,50 @@ export default function ProductsPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Funções de Edição
+  function handleEditClick(product: Product) {
+    setEditingProduct(product);
+    setEditForm({
+      name: product.name,
+      price: product.price,
+      category_id: product.category_id
+    });
+  }
+
+  async function handleSaveEdit() {
+    if (!editingProduct) return;
+
+    try {
+      setSaving(true);
+      
+      // Como o router não tem prefix, a URL é apenas /{id}
+      await api.put(`/${editingProduct.id}`, {
+        name: editForm.name,
+        price: editForm.price,
+        category_id: editForm.category_id
+      });
+
+      // Atualiza localmente após salvar
+      setProducts(products.map(product => 
+        product.id === editingProduct.id 
+          ? { 
+              ...product, 
+              ...editForm,
+              category: categories.find(c => c.id === editForm.category_id)
+            }
+          : product
+      ));
+
+      setEditingProduct(null);
+      
+    } catch (error: any) {
+      console.error("Erro ao atualizar produto:", error);
+      alert("Erro ao salvar alterações.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   // Aplicar Filtros
   const filteredProducts = products.filter((product) => {
@@ -108,7 +169,6 @@ export default function ProductsPage() {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory]);
 
-  // Limpar todos os filtros
   const clearFilters = () => {
     setSearchTerm("");
     setSelectedCategory("all");
@@ -140,7 +200,6 @@ export default function ProductsPage() {
 
       {/* Barra de Filtros */}
       <div className="flex flex-col md:flex-row gap-4">
-        {/* Busca por Nome */}
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -151,7 +210,6 @@ export default function ProductsPage() {
           />
         </div>
 
-        {/* Filtro por Categoria */}
         <div className="w-full md:w-[240px]">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger>
@@ -169,7 +227,6 @@ export default function ProductsPage() {
           </Select>
         </div>
 
-        {/* Botão Limpar Filtros */}
         {hasActiveFilters && (
           <Button variant="outline" onClick={clearFilters}>
             <X className="mr-2 h-4 w-4" />
@@ -187,18 +244,19 @@ export default function ProductsPage() {
               <TableHead>Nome</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead className="text-right">Preço</TableHead>
+              <TableHead className="text-right w-[80px]">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   Carregando estoque...
                 </TableCell>
               </TableRow>
             ) : filteredProducts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-32 text-center">
+                <TableCell colSpan={5} className="h-32 text-center">
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
                     <PackageOpen className="h-8 w-8" />
                     <p>
@@ -234,6 +292,16 @@ export default function ProductsPage() {
                       currency: "BRL",
                     })}
                   </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditClick(product)}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -264,7 +332,6 @@ export default function ProductsPage() {
 
               <div className="flex items-center gap-1">
                 {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                  // Lógica para mostrar páginas ao redor da atual
                   let page;
                   if (totalPages <= 5) {
                     page = i + 1;
@@ -305,6 +372,81 @@ export default function ProductsPage() {
           </div>
         )}
       </div>
+
+      {/* Modal de Edição */}
+      <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Produto #{editingProduct?.id}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Nome do Produto</Label>
+              <Input
+                id="edit-name"
+                value={editForm.name}
+                onChange={(e) => setEditForm({
+                  ...editForm,
+                  name: e.target.value
+                })}
+                placeholder="Ex: Notebook Dell"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-price">Preço (R$)</Label>
+              <Input
+                id="edit-price"
+                type="number"
+                step="0.01"
+                value={editForm.price}
+                onChange={(e) => setEditForm({
+                  ...editForm,
+                  price: parseFloat(e.target.value) || 0
+                })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-category">Categoria</Label>
+              <Select 
+                value={editForm.category_id.toString()} 
+                onValueChange={(value) => setEditForm({
+                  ...editForm,
+                  category_id: parseInt(value)
+                })}
+              >
+                <SelectTrigger id="edit-category">
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setEditingProduct(null)}
+              disabled={saving}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              <Check className="mr-2 h-4 w-4" />
+              {saving ? "Salvando..." : "Salvar Alterações"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
