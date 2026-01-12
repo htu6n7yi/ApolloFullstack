@@ -115,3 +115,21 @@ def get_dashboard_stats(db: Session):
         "total_profit": float(total_profit),
         "chart_data": chart_data
     }
+
+def update_product(db: Session, product_id: int, product_data: schemas.ProductCreate):
+    # 1. Busca o produto no banco
+    db_product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    
+    # 2. Se não achar, retorna None (para o router lançar erro 404)
+    if not db_product:
+        return None
+
+    # 3. Atualiza os campos
+    # Transformamos os dados recebidos em dicionário e atualizamos o objeto do banco
+    for key, value in product_data.dict().items():
+        setattr(db_product, key, value)
+
+    # 4. Salva as mudanças
+    db.commit()
+    db.refresh(db_product)
+    return db_product

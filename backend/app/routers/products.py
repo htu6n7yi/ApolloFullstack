@@ -44,3 +44,19 @@ def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)
 def read_categories(db: Session = Depends(get_db)):
     # Retorna todas as categorias para usar no dropdown do frontend
     return db.query(models.Category).all()
+
+# ... imports existentes ...
+
+# Rota de Edição (PUT)
+# A URL será algo como: /products/15 (onde 15 é o ID)
+@router.put("/{product_id}", response_model=schemas.Product)
+def update_product(product_id: int, product: schemas.ProductCreate, db: Session = Depends(get_db)):
+    """Atualiza os dados de um produto existente."""
+    
+    # Chama a função do CRUD que criamos acima
+    db_product = crud.update_product(db, product_id=product_id, product_data=product)
+    
+    if db_product is None:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+        
+    return db_product
