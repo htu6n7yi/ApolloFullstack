@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { RegisterSaleSheet } from "@/components/RegisterSaleSheet";
 import { CsvUploadModal } from "@/components/CsvUploadModal";
+import { ExportButton } from "@/components/ExportButton";
 import { Pencil, PackageOpen, X, Check } from "lucide-react";
 import {
   Table,
@@ -116,6 +117,7 @@ export default function SalesPage() {
         </div>
         
         <div className="flex gap-2">
+          <ExportButton type="sales" />
           <CsvUploadModal 
             onSuccess={fetchSales} 
             endpoint="/upload-sales-csv/" 

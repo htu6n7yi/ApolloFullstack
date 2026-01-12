@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { CreateProductModal } from "@/components/CreateProductModal";
 import { CsvUploadModal } from "@/components/CsvUploadModal";
+import { ExportButton } from "@/components/ExportButton";
 
 interface Category {
   id: number;
@@ -85,13 +86,14 @@ export default function ProductsPage() {
     try {
       setLoading(true);
       const [productsRes, categoriesRes] = await Promise.all([
-        api.get("/products/"),
-        api.get("/categories/")
+        api.get("/products/"),  // Rota definida no seu router
+        api.get("/categories/") // Rota definida no seu router
       ]);
       setProducts(productsRes.data);
       setCategories(categoriesRes.data);
     } catch (error) {
       console.error("Erro ao buscar dados:", error);
+      alert("Erro ao carregar dados. Verifique se o backend está rodando em http://localhost:8000");
     } finally {
       setLoading(false);
     }
@@ -189,6 +191,7 @@ export default function ProductsPage() {
         </div>
 
         <div className="flex gap-2">
+          <ExportButton type="products" />
           <CsvUploadModal
             onSuccess={fetchData}
             endpoint="/upload-csv/"
