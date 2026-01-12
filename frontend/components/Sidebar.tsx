@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Package, ShoppingCart, Settings, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -24,10 +25,6 @@ export function Sidebar() {
     <>
       {/* Barra superior mobile e tablet */}
       <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-slate-900 px-4 py-3 lg:hidden">
-        <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-lg bg-emerald-500" />
-          <h1 className="text-lg font-bold tracking-tight text-white">Apollo Admin</h1>
-        </div>
         <button
           onClick={toggleMenu}
           className="text-white hover:text-emerald-500 transition-colors"
@@ -35,6 +32,17 @@ export function Sidebar() {
         >
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
+        
+        <div className="flex items-center gap-2">
+          <Image
+            src="/logo.png"
+            alt="Apollo Logo"
+            width={28}
+            height={28}
+            className="rounded-lg"
+          />
+          <h1 className="text-lg font-bold tracking-tight text-white">Apollo Admin</h1>
+        </div>
       </div>
 
       {/* Overlay escuro quando menu está aberto */}
@@ -56,7 +64,13 @@ export function Sidebar() {
         {/* Logo - desktop */}
         <div>
           <div className="mb-8 hidden md:flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-emerald-500" />
+            <Image
+              src="/logo.png"
+              alt="Apollo Logo"
+              width={32}
+              height={32}
+              className="rounded-lg"
+            />
             <h1 className="text-xl font-bold tracking-tight">Apollo Admin</h1>
           </div>
 
